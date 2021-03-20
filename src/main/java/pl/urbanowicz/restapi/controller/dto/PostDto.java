@@ -1,6 +1,4 @@
-package pl.urbanowicz.restapi.dto;
-
-import pl.urbanowicz.restapi.model.Post;
+package pl.urbanowicz.restapi.controller.dto;
 
 import java.time.LocalDateTime;
 

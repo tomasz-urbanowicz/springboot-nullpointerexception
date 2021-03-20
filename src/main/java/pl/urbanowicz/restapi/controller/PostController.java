@@ -1,15 +1,14 @@
 package pl.urbanowicz.restapi.controller;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RestController;
-import pl.urbanowicz.restapi.dto.PostDto;
+import org.springframework.data.domain.Sort;
+import org.springframework.web.bind.annotation.*;
+import pl.urbanowicz.restapi.controller.dto.PostDto;
+import pl.urbanowicz.restapi.controller.dto.PostDtoMapper;
 import pl.urbanowicz.restapi.model.Post;
 import pl.urbanowicz.restapi.service.PostService;
 
 import java.util.List;
-import java.util.stream.Collectors;
 
 @RestController
 public class PostController {
@@ -22,27 +21,36 @@ public class PostController {
     }
 
     @GetMapping("/posts")
-    public List<PostDto> getPosts() {
-        return mapToDtos(postService.getPosts());
+    public List<PostDto> getPosts(@RequestParam(required = false) Integer page, Sort.Direction sort) {
+        int pageNumber = page != null && page >= 0 ? page : 0;
+        Sort.Direction sortDirection = sort != null ? sort : Sort.Direction.ASC;
+        return PostDtoMapper.mapToPostDtos(postService.getPosts(pageNumber, sortDirection));
     }
 
-    private List<PostDto> mapToDtos(List<Post> posts) {
-        return posts.stream()
-                .map(post -> mapToPostDto(post))
-                .collect(Collectors.toList());
-    }
-
-    private PostDto mapToPostDto(Post post) {
-        return PostDto.Builder.builder()
-                .id(post.getId())
-                .title(post.getTitle())
-                .content(post.getContent())
-                .created(post.getCreated())
-                .build();
+    @GetMapping("/posts/comments")
+    public List<Post> getPostsWithComments(@RequestParam(required = false) Integer page, Sort.Direction sort) {
+        int pageNumber = page != null && page >= 0 ? page : 0;
+        Sort.Direction sortDirection = sort != null ? sort : Sort.Direction.ASC;
+        return postService.getPostsWithComments(pageNumber, sortDirection);
     }
 
     @GetMapping("/posts/{id}")
     public Post getSinglePost(@PathVariable("id") long id) {
         return postService.getPostById(id);
+    }
+
+    @PostMapping("/posts")
+    public Post addPost(@RequestBody Post post) {
+        return postService.addPost(post);
+    }
+
+    @PutMapping("/posts")
+    public Post editPost(@RequestBody Post post) {
+        return postService.editPost(post);
+    }
+
+    @DeleteMapping("/posts/{id}")
+    public void deletePost(@PathVariable("id") long id) {
+        postService.deletePostById(id);
     }
 }

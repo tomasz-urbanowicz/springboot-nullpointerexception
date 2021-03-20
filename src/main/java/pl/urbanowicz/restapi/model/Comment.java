@@ -9,6 +9,7 @@ public class Comment {
 
     @Id
     private long id;
+    private long postId;
     private String content;
     private LocalDateTime created;
 
@@ -34,5 +35,13 @@ public class Comment {
 
     public void setCreated(LocalDateTime created) {
         this.created = created;
+    }
+
+    public long getPostId() {
+        return postId;
+    }
+
+    public void setPostId(long postId) {
+        this.postId = postId;
     }
 }

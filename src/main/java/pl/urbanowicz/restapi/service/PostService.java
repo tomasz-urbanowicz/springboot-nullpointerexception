@@ -1,6 +1,9 @@
 package pl.urbanowicz.restapi.service;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.CachePut;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
@@ -30,17 +33,19 @@ public class PostService {
         return postRepository.findAllPosts(PageRequest.of(page, PAGE_SIZE, Sort.by(sort, "id")));
     }
 
-    public Post getPostById(Long id) {
+    @Cacheable(cacheNames = "SinglePost",key = "#id")
+    public Post getSinglePost(Long id) {
         return postRepository.findById(id)
                 .orElseThrow();
     }
 
+    @Cacheable(cacheNames = "PostsWithComments")
     public List<Post> getPostsWithComments(int page, Sort.Direction sort) {
         List<Post> allPosts = postRepository.findAllPosts(PageRequest.of(page, PAGE_SIZE, Sort.by(sort, "id")));
 
         List<Long> ids = allPosts
                 .stream()
-                .map(post -> post.getId())
+                .map(Post::getId)
                 .collect(Collectors.toList());
         List<Comment> comments = commentRepository.findAllByPostIdIn(ids);
         allPosts.forEach(post -> post.setComment(extractComments(comments, post.getId())));
@@ -60,6 +65,7 @@ public class PostService {
     }
 
     @Transactional
+    @CachePut(cacheNames = "SinglePost", key = "#result.id")
     public Post editPost(Post post) {
         Post postEdited = postRepository.findById(post.getId()).orElseThrow();
         postEdited.setTitle(post.getTitle());
@@ -67,7 +73,13 @@ public class PostService {
         return postEdited;
     }
 
+    @CacheEvict(cacheNames = "SinglePost")
     public void deletePostById(long id) {
         postRepository.deleteById(id);
+    }
+
+    @CacheEvict(cacheNames = "PostsWithComments")
+    public void clearPostsWithCommentsCache() {
+
     }
 }

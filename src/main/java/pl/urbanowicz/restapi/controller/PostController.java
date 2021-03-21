@@ -2,6 +2,8 @@ package pl.urbanowicz.restapi.controller;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Sort;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 import pl.urbanowicz.restapi.controller.dto.PostDto;
 import pl.urbanowicz.restapi.controller.dto.PostDtoMapper;
@@ -21,7 +23,8 @@ public class PostController {
     }
 
     @GetMapping("/posts")
-    public List<PostDto> getPosts(@RequestParam(required = false) Integer page, Sort.Direction sort) {
+    public List<PostDto> getPosts(@RequestParam(required = false) Integer page, Sort.Direction sort,
+                                  @AuthenticationPrincipal UsernamePasswordAuthenticationToken user) {
         int pageNumber = page != null && page >= 0 ? page : 0;
         Sort.Direction sortDirection = sort != null ? sort : Sort.Direction.ASC;
         return PostDtoMapper.mapToPostDtos(postService.getPosts(pageNumber, sortDirection));
@@ -36,7 +39,7 @@ public class PostController {
 
     @GetMapping("/posts/{id}")
     public Post getSinglePost(@PathVariable("id") long id) {
-        return postService.getPostById(id);
+        return postService.getSinglePost(id);
     }
 
     @PostMapping("/posts")
